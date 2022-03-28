@@ -79,32 +79,38 @@ class UpdateDocblockReturnTypeTask extends BuildTask
                     continue;
                 }
                 $oldReturnTypeDocblock = $m[1];
-                $newReturnTypeDocblock = $oldReturnTypeDocblock;
+                $old = explode('|', strtolower($oldReturnTypeDocblock));
+                $new = explode('|', $oldReturnTypeDocblock);
                 $returnTypes = ['null', 'false', 'true'];
                 $contents = file_get_contents($reflMethod->getFileName());
+                $arr = explode("\n", $contents);
+                $startLine = $reflMethod->getStartLine();
+                $slicedArr = array_slice($arr, $startLine, $reflMethod->getEndLine() - $startLine);
+                $methodContents = implode("\n", $slicedArr);
                 foreach ($returnTypes as $returnType) {
                     $returnTypeIsBool = in_array($returnType, ['true', 'false']);
-                    if (strpos($oldReturnTypeDocblock, 'mixed') !== false) {
+                    if (in_array($returnType, $old)) {
                         continue;
                     }
-                    if (strpos($oldReturnTypeDocblock, $returnType) !== false) {
+                    if (in_array('mixed', $old)) {
                         continue;
                     }
-                    if ($returnTypeIsBool && strpos($oldReturnTypeDocblock, 'bool') !== false) {
+                    if ($returnTypeIsBool && (in_array('bool', $old) || in_array('boolean', $old))) {
                         continue;
                     }
-                    $arr = explode("\n", $contents);
-                    $startLine = $reflMethod->getStartLine();
-                    $slicedArr = array_slice($arr, $startLine, $reflMethod->getEndLine() - $startLine);
-                    $methodContents = implode("\n", $slicedArr);
                     if (strpos($methodContents, 'function') !== false) {
                         // return types within anonymous functions just make things too complex
                         continue;
                     }
                     if (strpos($methodContents, 'return ' . $returnType) !== false) {
-                        $newReturnTypeDocblock .= '|' . $returnType;
+                        $new[] = $returnType;
+                    }
+                    if (in_array('true', $new) && in_array('false', $new)) {
+                        $new = array_filter($new, fn($v) => !in_array($v, ['true', 'false']));
+                        $new[] = 'bool';
                     }
                 }
+                $newReturnTypeDocblock = implode('|', $new);
                 if ($newReturnTypeDocblock == $oldReturnTypeDocblock) {
                     continue;
                 }
@@ -116,8 +122,8 @@ class UpdateDocblockReturnTypeTask extends BuildTask
                     $oldDocblock
                 );
                 $contents = preg_replace(
-                    sprintf('#(?s)%s(.+?)function %s#', preg_quote($oldDocblock), $method),
-                    $newDocblock . '$1function ' . $method,
+                    sprintf("#(?s)%s\n([^\n]+)function %s#", trim(preg_quote($oldDocblock)), $method),
+                    trim($newDocblock) . "\n" . '$1function ' . $method,
                     $contents
                 );
                 file_put_contents($path, $contents);
