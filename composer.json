@@ -1,0 +1,17 @@
+{
+    "name": "emteknetnz/docblock-return-updater",
+    "description": "Docblock return updater",
+    "type": "silverstripe-vendormodule",
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "silverstripe/framework": "^4"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Steve Boyd",
+            "email": "emteknetnz@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}
