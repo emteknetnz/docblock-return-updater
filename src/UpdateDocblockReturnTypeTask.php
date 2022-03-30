@@ -60,7 +60,7 @@ class UpdateDocblockReturnTypeTask extends BuildTask
                     continue;
                 }
                 $docblock = $reflMethod->getDocComment();
-                if (!preg_match('#@return +([a-zA-Z0-9\|]+)#', $docblock, $m)) {
+                if (!preg_match('#@return +([a-zA-Z0-9_\[\]\|]+)#', $docblock, $m)) {
                     continue;
                 }
                 $oldReturnTypeDocblock = $m[1];
@@ -112,7 +112,16 @@ class UpdateDocblockReturnTypeTask extends BuildTask
                     if ($returnType == 'array') {
                         if (preg_match('#return \[.*?\];#', $methodContents)) {
                             if (!in_array('arrayaccess', $old)) {
-                                $new[] = $returnType;
+                                $existingArrayType = false;
+                                foreach ($old as $t) {
+                                    // e.g. int[]
+                                    if (strpos($t, '[') !== false) {
+                                        $existingArrayType = true;
+                                    }
+                                }
+                                if (!$existingArrayType) {
+                                    $new[] = $returnType;
+                                }
                             }
                         }
                     }
