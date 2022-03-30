@@ -81,7 +81,7 @@ class UpdateDocblockReturnTypeTask extends BuildTask
                 $oldReturnTypeDocblock = $m[1];
                 $old = explode('|', strtolower($oldReturnTypeDocblock));
                 $new = explode('|', $oldReturnTypeDocblock);
-                $returnTypes = ['null', 'false', 'true'];
+                $returnTypes = ['null', 'false', 'true', 'int', 'float', 'string', 'array'];
                 $contents = file_get_contents($reflMethod->getFileName());
                 $arr = explode("\n", $contents);
                 $startLine = $reflMethod->getStartLine();
@@ -92,6 +92,8 @@ class UpdateDocblockReturnTypeTask extends BuildTask
                     if (in_array($returnType, $old)) {
                         continue;
                     }
+                    // mixed includes null
+                    // https://php.watch/versions/8.0/mixed-type
                     if (in_array('mixed', $old)) {
                         continue;
                     }
@@ -102,8 +104,32 @@ class UpdateDocblockReturnTypeTask extends BuildTask
                         // return types within anonymous functions just make things too complex
                         continue;
                     }
-                    if (strpos($methodContents, 'return ' . $returnType) !== false) {
-                        $new[] = $returnType;
+                    if (in_array($returnType, ['null', 'false', 'true'])) {
+                        if (strpos($methodContents, 'return ' . $returnType . ';') !== false) {
+                            $new[] = $returnType;
+                        }
+                    }
+                    if ($returnType == 'int') {
+                        if (preg_match('#return [0-9]+;#', $methodContents)) {
+                            $new[] = $returnType;
+                        }
+                    }
+                    if ($returnType == 'float') {
+                        if (preg_match('#return [0-9]+\.[0-9]+;#', $methodContents)) {
+                            $new[] = $returnType;
+                        }
+                    }
+                    if ($returnType == 'string') {
+                        if (preg_match('#return [\'"].*?[\'"];#', $methodContents)) {
+                            $new[] = $returnType;
+                        }
+                    }
+                    if ($returnType == 'array') {
+                        if (preg_match('#return \[.*?\];#', $methodContents)) {
+                            if (!in_array('arrayaccess', $old)) {
+                                $new[] = $returnType;
+                            }
+                        }
                     }
                     if (in_array('true', $new) && in_array('false', $new)) {
                         $new = array_filter($new, fn($v) => !in_array($v, ['true', 'false']));
