@@ -6,37 +6,22 @@ class UpdateDocblockReturnTypeTask extends BuildTask
 {
     public function run($request)
     {
-        $dirs = [
-            BASE_PATH . '/vendor/dnadesign/silverstripe-elemental',
-            BASE_PATH . '/vendor/silverstripe/admin',
-            BASE_PATH . '/vendor/silverstripe/asset-admin',
-            BASE_PATH . '/vendor/silverstripe/assets',
-            BASE_PATH . '/vendor/silverstripe/behat-extension',
-            BASE_PATH . '/vendor/silverstripe/campaign-admin',
-            BASE_PATH . '/vendor/silverstripe/cms',
-            BASE_PATH . '/vendor/silverstripe/config',
-            BASE_PATH . '/vendor/silverstripe/elemental-bannerblock',
-            BASE_PATH . '/vendor/silverstripe/elemental-fileblock',
-            BASE_PATH . '/vendor/silverstripe/errorpage',
-            BASE_PATH . '/vendor/silverstripe/framework',
-            BASE_PATH . '/vendor/silverstripe/graphql',
-            BASE_PATH . '/vendor/silverstripe/login-forms',
-            BASE_PATH . '/vendor/silverstripe/mimevalidator',
-            BASE_PATH . '/vendor/silverstripe/mink-facebook-web-driver',
-            BASE_PATH . '/vendor/silverstripe/serve',
-            BASE_PATH . '/vendor/silverstripe/session-manager',
-            BASE_PATH . '/vendor/silverstripe/siteconfig',
-            BASE_PATH . '/vendor/silverstripe/testsession',
-            BASE_PATH . '/vendor/silverstripe/vendor-plugin',
-            BASE_PATH . '/vendor/silverstripe/versioned',
-            BASE_PATH . '/vendor/silverstripe/versioned-admin',
-            BASE_PATH . '/vendor/symbiote/silverstripe-gridfieldextensions',
+        $vendorDirs = [
+            BASE_PATH . '/vendor/dnadesign',
+            BASE_PATH . '/vendor/silverstripe',
+            BASE_PATH . '/vendor/symbiote',
         ];
-        foreach ($dirs as $dir) {
-            foreach (['src', 'code', 'tests'] as $d) {
-                $subdir = "$dir/$d";
-                if (file_exists($subdir)) {
-                    $this->update($subdir);
+        foreach ($vendorDirs as $vendorDir) {
+            foreach (scandir($vendorDir) as $subdir) {
+                if (in_array($subdir, ['.', '..'])) {
+                    continue;
+                }
+                $dir = "$vendorDir/$subdir";
+                foreach (['src', 'code', 'tests'] as $d) {
+                    $subdir = "$dir/$d";
+                    if (file_exists($subdir)) {
+                        $this->update($subdir);
+                    }
                 }
             }
         }
