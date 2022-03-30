@@ -10,8 +10,12 @@ class UpdateDocblockReturnTypeTask extends BuildTask
             BASE_PATH . '/vendor/dnadesign',
             BASE_PATH . '/vendor/silverstripe',
             BASE_PATH . '/vendor/symbiote',
+            BASE_PATH . '/vendor/bringyourownideas',
         ];
         foreach ($vendorDirs as $vendorDir) {
+            if (!file_exists($vendorDir)) {
+                continue;
+            }
             foreach (scandir($vendorDir) as $subdir) {
                 if (in_array($subdir, ['.', '..'])) {
                     continue;
